@@ -208,31 +208,39 @@ class App(FirebaseAuthenticator, RealtimeDB):
                         if add_button:
                             st.session_state.cart.add_item(product)
                             st.toast(f"**{product.name} added to cart!**", icon="🛒")
-            status_0.update(label="**Products loaded!**", state="complete", expanded=True)
-                    
+            status_0.update(
+                label="**Products loaded!**", state="complete", expanded=True
+            )
+
         for message in st.session_state["messages"]:
             if message["role"] != "system":  # Skip system messages
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
         if prompt := st.chat_input("Ask me anything!"):
- 
-        #     st.markdown(
-        #             f"""
-        # <script>
-        #     window.scrollTo({{
-        #         top: document.body.scrollHeight,
-        #         behavior: 'smooth' // Optional: Add smooth scrolling effect
-        #     }});
-        # </script>
-        # """,
-        #             unsafe_allow_html=True,
-        #         )
+
+            #     st.markdown(
+            #             f"""
+            # <script>
+            #     window.scrollTo({{
+            #         top: document.body.scrollHeight,
+            #         behavior: 'smooth' // Optional: Add smooth scrolling effect
+            #     }});
+            # </script>
+            # """,
+            #             unsafe_allow_html=True,
+            #         )
             st.session_state["messages"].append({"role": "user", "content": prompt})
             with st.chat_message("user"):
-                status_0.update(label="**Minimized! - Expand to view products**", state="complete", expanded=False)
+                status_0.update(
+                    label="**Minimized! - Expand to view products**",
+                    state="complete",
+                    expanded=False,
+                )
                 st.markdown(prompt)
 
-            with st.status(label="**We are cooking up a response...**", expanded=False) as status:
+            with st.status(
+                label="**We are cooking up a response...**", expanded=False
+            ) as status:
                 with st.chat_message("assistant"):
                     message_placeholder = st.empty()
                     full_response = chatbot.ask(prompt)
@@ -240,7 +248,9 @@ class App(FirebaseAuthenticator, RealtimeDB):
                 st.session_state["messages"].append(
                     {"role": "assistant", "content": full_response}
                 )
-                status.update(label="**Response is ready!**", state="complete", expanded=True)
+                status.update(
+                    label="**Response is ready!**", state="complete", expanded=True
+                )
         cols = st.columns([20, 10, 20])
         with cols[0]:
             st.empty()
@@ -248,7 +258,9 @@ class App(FirebaseAuthenticator, RealtimeDB):
             if len(st.session_state.get("messages", [])) > 1:
                 if st.button("Clear Chat", use_container_width=True):
                     chatbot.clear_chat()
-                    status_0.update(label="**Chat cleared!**", state="complete", expanded=True)
+                    status_0.update(
+                        label="**Chat cleared!**", state="complete", expanded=True
+                    )
                     st.rerun()
         with cols[2]:
             st.empty()
@@ -289,6 +301,7 @@ class App(FirebaseAuthenticator, RealtimeDB):
             st.write(f"""### Your account has premium access, this includes:""")
             st.write(
                 """ 
+                - *Subcrition Plan: Base ($9.99/month)* \n
                 - Chat with the AI assistant.\n
                 - Premnium Support.\n
                 **More features coming soon!**
