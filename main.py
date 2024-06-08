@@ -229,7 +229,7 @@ class App(FirebaseAuthenticator, RealtimeDB):
         #         )
             st.session_state["messages"].append({"role": "user", "content": prompt})
             with st.chat_message("user"):
-                status_0.update(label="**Minimized!**", state="complete", expanded=False)
+                status_0.update(label="**Minimized! - Expand to view products**", state="complete", expanded=False)
                 st.markdown(prompt)
 
             with st.status(label="**We are cooking up a response...**", expanded=False) as status:
