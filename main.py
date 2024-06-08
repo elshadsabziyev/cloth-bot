@@ -95,7 +95,7 @@ class ProductCatalog:
 
 
 def main():
-    st.title("E-Commerce Site")
+    st.title("KalagAI")
 
     hide_img_fs = """
     <style>
@@ -145,7 +145,8 @@ def main():
     for i, product in enumerate(products):
         with cols[i % 3]:
             st.write(str(product))
-            st.image(product.photo, use_column_width=True)
+            with st.container(border=True, height=250):
+                st.image(product.photo, use_column_width=True)
             add_button = st.button("Add to Cart", key=f"add_{i}")
             if add_button:
                 st.session_state.cart.add_item(product)
