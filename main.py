@@ -11,7 +11,7 @@ class ChatBot:
         self.client = Together(api_key=api_key)
         if "messages" not in st.session_state:
             # Load products from CSV
-            products_df = pd.read_csv("your_data.csv")
+            products_df = pd.read_csv("assets/your_data.csv")
             products_str = products_df.to_string(index=False)
 
             st.session_state["messages"] = [
@@ -106,7 +106,7 @@ def main():
     st.markdown(hide_img_fs, unsafe_allow_html=True)
 
     # Load products from CSV
-    catalog = ProductCatalog("your_data.csv")
+    catalog = ProductCatalog("assets/your_data.csv")
     products = catalog.get_products()
 
     # Initialize the chatbot
