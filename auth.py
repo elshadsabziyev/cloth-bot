@@ -203,6 +203,7 @@ class FirebaseAuthenticator(Credentials):
             id_token = self.sign_in_with_email_and_password(email, password)["idToken"]
             # user_info = self.get_account_info(id_token)["users"][0]
             account_info = self.get_account_info(id_token)
+            print(account_info)
             user_info = account_info["users"][0]
             if not user_info["emailVerified"]:
                 self.send_email_verification(id_token)
@@ -464,3 +465,49 @@ class FirebaseAuthenticator(Credentials):
                 return False
         except Exception as error:
             return False
+    def get_test_user(self):
+        """
+        Returns the test user.
+
+        Returns:
+            A dictionary containing the test user's information.
+        """
+        return {
+            "fullUserInfo": {
+                "users": [
+                    {
+                        "localId": "test_user_id",
+                        "email": "test_user_email",
+                        "displayName": "Test User",
+                        "photoUrl": "https://example.com/test_user_photo.jpg",
+                        "emailVerified": True,
+                        "providerUserInfo": [
+                            {
+                                "providerId": "password",
+                                "federatedId": "test_user_federated_id",
+                                "email": "test_user_email",
+                                "displayName": "Test User",
+                                "photoUrl": "https://example.com/test_user_photo.jpg",
+                                "rawId": "test_user_raw_id",
+                            }
+                        ],
+                        "validSince": "1717877715",
+                        "lastLoginAt": "1717886593722",
+                        "createdAt": "1717877715170",
+                        "lastRefreshAt": "2024-06-08T22:43:13.722Z",
+                        "testUser": True,
+                    }
+                ],
+            },
+            "idToken": "test_id_token",
+        }
+    
+    def sign_in_test_user(self):
+        """
+        Signs in the test user.
+
+        Returns:
+            None
+        """
+        st.session_state.user_info = self.get_test_user()
+        st.rerun()

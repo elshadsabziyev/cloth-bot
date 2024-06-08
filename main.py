@@ -154,7 +154,12 @@ class App(FirebaseAuthenticator, RealtimeDB):
                 ):
                     with auth_notification, st.spinner("Sending password reset link"):
                         self.reset_password(email)
-
+                if auth_form.form_submit_button(
+                    label="Continue as Guest",
+                    use_container_width=True,
+                    type="secondary",
+                ):
+                    self.sign_in_test_user()
             elif do_you_have_an_account == "No" and auth_form.form_submit_button(
                 label="Create Account", use_container_width=True, type="primary"
             ):
@@ -167,15 +172,32 @@ class App(FirebaseAuthenticator, RealtimeDB):
             elif "auth_warning" in st.session_state:
                 auth_notification.error(st.session_state.auth_warning)
                 del st.session_state.auth_warning
+
         else:
             self.home_page()
 
     def home_page(self):
         self.sidebar()
         try:
-            st.title(
-                f"**Welcome, _{st.session_state.user_info['fullUserInfo']['users'][0]['email'].split('@')[0]}_!**"
-            )
+            if (
+                st.session_state.user_info["fullUserInfo"]["users"][0]["localId"]
+                != "test_user_id"
+                and st.session_state.user_info["fullUserInfo"]["users"][0]["email"]
+                != "test_user_email"
+                and st.session_state.user_info["idToken"] != "test_id_token"
+            ):
+                st.title(
+                    f"**Welcome, _{st.session_state.user_info['fullUserInfo']['users'][0]['email'].split('@')[0]}_!**"
+                )
+            else:
+                st.title("**Welcome, Guest!**")
+                st.warning(
+                    """
+                    # You are currently in guest mode.
+                    - Sign in to access your account.
+                    - You can still add items to your cart and browse the store.
+                    """
+                )
         except:
             st.title("**Welcome!**")
         st.info(
@@ -211,59 +233,65 @@ class App(FirebaseAuthenticator, RealtimeDB):
             status_0.update(
                 label="**Products loaded!**", state="complete", expanded=True
             )
+        if (
+            st.session_state.user_info["fullUserInfo"]["users"][0]["localId"]
+            != "test_user_id"
+            and st.session_state.user_info["fullUserInfo"]["users"][0]["email"]
+            != "test_user_email"
+            and st.session_state.user_info["idToken"] != "test_id_token"
+        ):
+            for message in st.session_state["messages"]:
+                if message["role"] != "system":  # Skip system messages
+                    with st.chat_message(message["role"]):
+                        st.markdown(message["content"])
+            if prompt := st.chat_input("Ask me anything!"):
 
-        for message in st.session_state["messages"]:
-            if message["role"] != "system":  # Skip system messages
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-        if prompt := st.chat_input("Ask me anything!"):
-
-            #     st.markdown(
-            #             f"""
-            # <script>
-            #     window.scrollTo({{
-            #         top: document.body.scrollHeight,
-            #         behavior: 'smooth' // Optional: Add smooth scrolling effect
-            #     }});
-            # </script>
-            # """,
-            #             unsafe_allow_html=True,
-            #         )
-            st.session_state["messages"].append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                status_0.update(
-                    label="**Minimized! - Expand to view products**",
-                    state="complete",
-                    expanded=False,
-                )
-                st.markdown(prompt)
-
-            with st.status(
-                label="**We are cooking up a response...**", expanded=False
-            ) as status:
-                with st.chat_message("assistant"):
-                    message_placeholder = st.empty()
-                    full_response = chatbot.ask(prompt)
-                    message_placeholder.markdown(full_response + "▌")
-                st.session_state["messages"].append(
-                    {"role": "assistant", "content": full_response}
-                )
-                status.update(
-                    label="**Response is ready!**", state="complete", expanded=True
-                )
-        cols = st.columns([20, 10, 20])
-        with cols[0]:
-            st.empty()
-        with cols[1]:
-            if len(st.session_state.get("messages", [])) > 1:
-                if st.button("Clear Chat", use_container_width=True):
-                    chatbot.clear_chat()
+                #     st.markdown(
+                #             f"""
+                # <script>
+                #     window.scrollTo({{
+                #         top: document.body.scrollHeight,
+                #         behavior: 'smooth' // Optional: Add smooth scrolling effect
+                #     }});
+                # </script>
+                # """,
+                #             unsafe_allow_html=True,
+                #         )
+                st.session_state["messages"].append({"role": "user", "content": prompt})
+                with st.chat_message("user"):
                     status_0.update(
-                        label="**Chat cleared!**", state="complete", expanded=True
+                        label="**Minimized! - Expand to view products**",
+                        state="complete",
+                        expanded=False,
                     )
-                    st.rerun()
-        with cols[2]:
-            st.empty()
+                    st.markdown(prompt)
+
+                with st.status(
+                    label="**We are cooking up a response...**", expanded=False
+                ) as status:
+                    with st.chat_message("assistant"):
+                        message_placeholder = st.empty()
+                        full_response = chatbot.ask(prompt)
+                        message_placeholder.markdown(full_response + "▌")
+                    st.session_state["messages"].append(
+                        {"role": "assistant", "content": full_response}
+                    )
+                    status.update(
+                        label="**Response is ready!**", state="complete", expanded=True
+                    )
+            cols = st.columns([20, 10, 20])
+            with cols[0]:
+                st.empty()
+            with cols[1]:
+                if len(st.session_state.get("messages", [])) > 1:
+                    if st.button("Clear Chat", use_container_width=True):
+                        chatbot.clear_chat()
+                        status_0.update(
+                            label="**Chat cleared!**", state="complete", expanded=True
+                        )
+                        st.rerun()
+            with cols[2]:
+                st.empty()
 
     def sidebar(self):
         st.sidebar.write("# Your Account")
@@ -294,21 +322,47 @@ class App(FirebaseAuthenticator, RealtimeDB):
             )
             time.sleep(2)
             st.rerun()
-        with st.sidebar.expander("**Premium Access**"):
-            st.write(
-                f"**Email:** {st.session_state.user_info['fullUserInfo']['users'][0]['email']}"
-            )
-            st.write(f"""### Your account has premium access, this includes:""")
-            st.write(
-                """ 
-                - *Subcrition Plan: Base ($9.99/month)* \n
-                - Chat with the AI assistant.\n
-                - Premnium Support.\n
-                **More features coming soon!**
-                """
-            )
-        with st.sidebar.expander("**Click for Account Settings**"):
-            self.account_settings()
+        if (
+            st.session_state.user_info["fullUserInfo"]["users"][0]["localId"]
+            != "test_user_id"
+            and st.session_state.user_info["fullUserInfo"]["users"][0]["email"]
+            != "test_user_email"
+            and st.session_state.user_info["idToken"] != "test_id_token"
+        ):
+            with st.sidebar.expander("**Premium Access**"):
+                st.write(
+                    f"**Email:** {st.session_state.user_info['fullUserInfo']['users'][0]['email']}"
+                )
+                st.success(f"""### Your account has premium access, this includes:""")
+                st.success(
+                    """ 
+                    - *Subcrition Plan: Base ($9.99/month)* \n
+                    - Chat with the AI assistant.\n
+                    - Premnium Support.\n
+                    **More features coming soon!**
+                    """
+                )
+        else:
+            with st.sidebar.expander("**Guest Access**"):
+ 
+                st.warning(f"""### Your are in guest mode""")
+                st.warning(
+                    """ 
+                    - *Subcrition Plan: Guest (Free)* \n
+                    - No AI assistant chat.\n
+                    - No premium support.\n
+                    **Upgrade to premium for more features!**
+                    """
+                )
+        if (
+            st.session_state.user_info["fullUserInfo"]["users"][0]["localId"]
+            != "test_user_id"
+            and st.session_state.user_info["fullUserInfo"]["users"][0]["email"]
+            != "test_user_email"
+            and st.session_state.user_info["idToken"] != "test_id_token"
+        ):
+            with st.sidebar.expander("**Click for Account Settings**"):
+                self.account_settings()
 
         # Initialize the cart if it doesn't exist
         if "cart" not in st.session_state:
