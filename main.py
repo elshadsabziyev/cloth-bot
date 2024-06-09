@@ -12,6 +12,8 @@ from together import Together
 from credential_loader import Credentials
 from streamlit import components
 from PIL import Image
+import urllib.parse
+
 
 class ChatBot:
     def __init__(self, api_key):
@@ -66,15 +68,24 @@ class Product:
 class Cart:
     def __init__(self):
         self.items = []
+        self.amazon_search_urls = []
 
     def add_item(self, product):
         self.items.append(product)
+        # Create the Amazon search URL
+        amazon_search_url = (
+            "https://www.amazon.com/s?k=earth friendly products {}".format(
+                urllib.parse.quote_plus(product.name)
+            )
+        )
+        self.amazon_search_urls.append(amazon_search_url)  # Store the Amazon search UR
 
     def remove_item(self, product):
         self.items.remove(product)
 
     def empty_cart(self):
         self.items = []
+        self.amazon_search_urls = []
 
     def get_total(self):
         total = 0
@@ -233,9 +244,13 @@ class App(FirebaseAuthenticator, RealtimeDB):
                             except:
                                 img_response = requests.get(
                                     f"https://api.pexels.com/v1/search?query={product.name} no background&per_page=1",
-                                    headers={"Authorization": "2OXVbBSnQpmrICfkKw2cn3QWFHIDl5YTR0yBWAuBMZauSbvOHmbEqZSd"},
+                                    headers={
+                                        "Authorization": "2OXVbBSnQpmrICfkKw2cn3QWFHIDl5YTR0yBWAuBMZauSbvOHmbEqZSd"
+                                    },
                                 )
-                                img_url = img_response.json()["photos"][0]["src"]["large"]
+                                img_url = img_response.json()["photos"][0]["src"][
+                                    "large"
+                                ]
                                 st.image(img_url, use_column_width=True)
 
                         add_button = st.button("Add to Cart", key=f"add_{i}")
@@ -356,7 +371,7 @@ class App(FirebaseAuthenticator, RealtimeDB):
                 )
         else:
             with st.sidebar.expander("**Guest Access**"):
- 
+
                 st.warning(f"""### Your are in guest mode""")
                 st.warning(
                     """ 
@@ -388,18 +403,29 @@ class App(FirebaseAuthenticator, RealtimeDB):
                 st.write("Your cart is empty.")
             else:
                 for item in st.session_state.cart.items:
-                    st.write(str(item))
+                    with st.container(border=True): 
+                        st.write(str(item))
                 total = st.session_state.cart.get_total()
                 st.write(f"Total: ${total:.2f}")
             cols = st.columns([1, 20, 20, 20, 1])
             with cols[0]:
                 st.empty()
             with cols[1]:
-                if st.button("Checkout", help="Proceed to checkout"):
-                    st.toast("Checkout feature coming soon!", icon="✅")
+                checkout_button = st.button("Checkout")
+                if checkout_button:
+                    for url in st.session_state.cart.amazon_search_urls:
+                        # Extract the item name from the URL
+                        item_name = url.split("products ")[1].replace("+", " ")
+
+                        # Write the item name and the URL
+                        st.sidebar.page_link(
+                            label=f"Search for '{item_name}' on Amazon",
+                            page=url,
+                        )
             with cols[2]:
                 if st.button("Clear Cart", help="Remove all items from the cart"):
                     st.session_state.cart.empty_cart()
+
             with cols[3]:
                 st.button("Refresh Cart", key="refresh_cart")
             with cols[4]:
