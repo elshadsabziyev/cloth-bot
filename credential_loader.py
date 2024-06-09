@@ -41,6 +41,10 @@ class Credentials:
         except KeyError:
             pass
         try:
+            self.pexels_credentials = self.get_pexels_credentials()
+        except KeyError:
+            pass
+        try:
             self.db_url = st.secrets["firebase_config"]["databaseURL"]
         except KeyError:
             st.error(
@@ -50,6 +54,15 @@ class Credentials:
                 - If the problem persists, please contact the developer.
                 """
             )
+
+    def get_pexels_credentials(self) -> str:
+        """
+        Retrieves the Pexels API key from the secrets file.
+
+        Returns:
+            pexels_api_key (str): Pexels API key.
+        """
+        return st.secrets["pexels"]["pexels_api_key"]
 
     def make_firebase_cert(self) -> credentials.Certificate:
         """

@@ -1,4 +1,5 @@
 import time
+import requests
 import streamlit as st
 from auth import FirebaseAuthenticator
 from realtimedb import RealtimeDB
@@ -10,7 +11,7 @@ from typing import List
 from together import Together
 from credential_loader import Credentials
 from streamlit import components
-
+from PIL import Image
 
 class ChatBot:
     def __init__(self, api_key):
@@ -106,9 +107,10 @@ class App(FirebaseAuthenticator, RealtimeDB):
         self.set_page_config()
 
     def set_page_config(self):
+        app_icon = Image.open("assets/icon.jpeg")
         st.set_page_config(
             page_title="Farm Dashboard",
-            page_icon="🏬",
+            page_icon=app_icon,
             layout="wide",
             initial_sidebar_state="auto",
         )
@@ -211,6 +213,7 @@ class App(FirebaseAuthenticator, RealtimeDB):
         products = catalog.get_products()
         # Initialize the chatbot
         chatbot = ChatBot(Credentials().openai_credentials)
+        pexels_api_key = Credentials().pexels_credentials
 
         # Initialize the cart
         if "cart" not in st.session_state:
@@ -225,7 +228,16 @@ class App(FirebaseAuthenticator, RealtimeDB):
                     with st.container(border=True, height=500):
                         st.write(str(product))
                         with st.container(border=True, height=280):
-                            st.image(product.photo, use_column_width=True)
+                            try:
+                                st.image(product.photo, use_column_width=True)
+                            except:
+                                img_response = requests.get(
+                                    f"https://api.pexels.com/v1/search?query={product.name} no background&per_page=1",
+                                    headers={"Authorization": "2OXVbBSnQpmrICfkKw2cn3QWFHIDl5YTR0yBWAuBMZauSbvOHmbEqZSd"},
+                                )
+                                img_url = img_response.json()["photos"][0]["src"]["large"]
+                                st.image(img_url, use_column_width=True)
+
                         add_button = st.button("Add to Cart", key=f"add_{i}")
                         if add_button:
                             st.session_state.cart.add_item(product)
