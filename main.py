@@ -166,7 +166,7 @@ class App(FirebaseAuthenticator, RealtimeDB):
         ) as status_0:
             st.write("## Books")
             status_0.update(
-                label="**Products loaded!**", state="complete", expanded=True
+                label="**Materials Analyzed! - Expand to view feedback**", state="complete", expanded=True
             )
         if (
             st.session_state.user_info["fullUserInfo"]["users"][0]["localId"]
