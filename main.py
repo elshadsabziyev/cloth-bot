@@ -20,17 +20,11 @@ class ChatBot:
         self.client = Together(api_key=api_key)
         if "messages" not in st.session_state:
             # Load products from CSV
-            products_df = pd.read_csv("assets/your_data.csv")
-            products_str = products_df.to_string(index=False)
 
             st.session_state["messages"] = [
                 {
                     "role": "system",
-                    "content": f"""Hello!  I'm your friendly style assistant, here to help you navigate our online store.  Tell me what kind of look you're going for, and I can recommend some amazing items we have in stock!  Plus, I can answer any questions you might have about styles, sizes, or anything else fashion-related.
-                                    I have the following products in stock:
-                                    {products_str}
-                                    I will both suggest clothes in or out of stock. But i will indicate in parenthesis if the item is out of stock. Or when in stock, i will indicate the price and other information about the item in parenthesis.
-                                """,
+                    "content": f"""Hello!  I'm AcademAI, your AI-powered assistant. I can help you with your academic needs, recommend books, answer questions, and provide information on a wide range of topics. I can also help you with your homework, research, and study needs. Let's get started!""",
                 }
             ]
 
@@ -49,7 +43,7 @@ class ChatBot:
         st.session_state["messages"] = [
             {
                 "role": "system",
-                "content": """Hello! I'm your AI-powered fashion assistant. I can help you find the perfect outfit, recommend items based on your preferences, and answer any questions you have about our products. I can also provide information about sizes, styles, and current fashion trends. Let's get started!""",
+                "content": """Hello! I'm AcademAI, your AI-powered assistant. I can help you with your academic needs, recommend books, answer questions, and provide information on a wide range of topics. I can also help you with your homework, research, and study needs. Let's get started!""",
             }
         ]
 
