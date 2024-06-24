@@ -54,62 +54,6 @@ class ChatBot:
         ]
 
 
-class Product:
-    def __init__(self, name, price, photo, category):
-        self.name = name
-        self.price = price
-        self.photo = photo
-        self.category = category
-
-    def __str__(self):
-        return f"#### {self.name} (${self.price})\n **{self.category}**"
-
-
-class Cart:
-    def __init__(self):
-        self.items = []
-        self.amazon_search_urls = []
-
-    def add_item(self, product):
-        self.items.append(product)
-        # Create the Amazon search URL
-        amazon_search_url = "https://www.amazon.com/s?k=Sustainable Clothing {}".format(
-            urllib.parse.quote_plus(product.name)
-        )
-        self.amazon_search_urls.append(amazon_search_url)  # Store the Amazon search UR
-
-    def remove_item(self, product):
-        self.items.remove(product)
-
-    def empty_cart(self):
-        self.items = []
-        self.amazon_search_urls = []
-
-    def get_total(self):
-        total = 0
-        for item in self.items:
-            total += item.price
-        return total
-
-
-class ProductCatalog:
-    def __init__(self, csv_file):
-        self.products = self.load_products(csv_file)
-
-    def load_products(self, csv_file) -> List[Product]:
-        df = pd.read_csv(csv_file)
-        products = []
-        for _, row in df.iterrows():
-            product = Product(
-                row["Product"], row["Price"], row["Photo"], row["Category"]
-            )
-            products.append(product)
-        return products
-
-    def get_products(self):
-        return self.products
-
-
 class App(FirebaseAuthenticator, RealtimeDB):
     def __init__(self):
         super().__init__()
@@ -213,50 +157,20 @@ class App(FirebaseAuthenticator, RealtimeDB):
             st.title("**Welcome!**")
         st.info(
             """
-            # KalagAI
+            # AcademAI
             """
         )
 
         # Load products from CSV
-        catalog = ProductCatalog("assets/your_data.csv")
-        products = catalog.get_products()
         # Initialize the chatbot
         chatbot = ChatBot(Credentials().openai_credentials)
         pexels_api_key = Credentials().pexels_credentials
 
-        # Initialize the cart
-        if "cart" not in st.session_state:
-            st.session_state.cart = Cart()
-
         # Display products
-        with st.status(label="**Loading products...**", expanded=False) as status_0:
-            st.write("## Products")
-            cols = st.columns(3)
-            for i, product in enumerate(products):
-                with cols[i % 3]:
-                    with st.container(border=True, height=500):
-                        st.write(str(product))
-                        with st.container(border=True, height=280):
-                            try:
-                                st.image(product.photo, use_column_width=True)
-                            except:
-                                img_response = requests.get(
-                                    f"https://api.pexels.com/v1/search?query={product.name} no background&per_page=1",
-                                    headers={
-                                        "Authorization": "2OXVbBSnQpmrICfkKw2cn3QWFHIDl5YTR0yBWAuBMZauSbvOHmbEqZSd"
-                                    },
-                                )
-                                img_url = img_response.json()["photos"][0]["src"][
-                                    "large"
-                                ]
-                                st.image(img_url, use_column_width=True)
-
-                        add_button = st.button("Add to Cart", key=f"add_{i}")
-                        if add_button:
-                            st.session_state.cart.add_item(product)
-                            st.toast(f"**{product.name} added to cart!**", icon="🛒")
-                            st.checkbox("Added to cart", value=True, key=f"added_{i}")
-                            st.rerun()
+        with st.status(
+            label="**Getting Lesson Materials**", expanded=False
+        ) as status_0:
+            st.write("## Books")
             status_0.update(
                 label="**Products loaded!**", state="complete", expanded=True
             )
@@ -331,8 +245,6 @@ class App(FirebaseAuthenticator, RealtimeDB):
                 "auth_success",
                 "auth_warning",
                 "auth_error",
-                "messages",
-                "cart",
             ]
 
             for var in session_state_variables:
@@ -390,85 +302,6 @@ class App(FirebaseAuthenticator, RealtimeDB):
         ):
             with st.sidebar.expander("**Click for Account Settings**"):
                 self.account_settings()
-
-        # Initialize the cart if it doesn't exist
-        if "cart" not in st.session_state:
-            st.session_state.cart = Cart()
-
-        with st.sidebar.status(
-            f"**Show Cart [{len(st.session_state.cart.items)} items]**", expanded=False
-        ) as status:
-            if not st.session_state.cart.items:
-                st.write("Your cart is empty.")
-            else:
-                for item in st.session_state.cart.items:
-                    with st.container(border=True):
-                        st.write(str(item))
-                total = st.session_state.cart.get_total()
-                st.write(f"Total: ${total:.2f}")
-            cols = st.columns([1, 20, 20, 20, 1])
-            with cols[0]:
-                st.empty()
-            with cols[1]:
-                with st.spinner("Processing..."):
-                    checkout_button = st.button(
-                        "Get Links", help="Find Eco-friendly alternatives on Amazon"
-                    )
-            with cols[2]:
-                if st.button("Clear Cart", help="Remove all items from the cart"):
-                    with st.spinner("Clearing cart..."):
-                        st.session_state.cart.empty_cart()
-                        st.rerun()
-
-            with cols[3]:
-                if st.button("Refresh Cart", key="refresh_cart"):
-                    with st.spinner("Refreshing cart..."):
-                        st.rerun()
-
-            with cols[4]:
-                st.empty()
-
-            status.update(
-                label=f"**Show Cart [{len(st.session_state.cart.items)} items]**",
-                state="complete",
-                expanded=True,
-            )
-        if checkout_button and len(st.session_state.cart.items) > 0:
-            with st.sidebar.container(border=True):
-                st.write("# Amazon Search Links")
-                for url in st.session_state.cart.amazon_search_urls:
-                    # Extract the item name from the URL
-                    try:
-                        item_name = url.split(" ")[-1]
-                        try:
-                            item_name = item_name.replace("+", " ")
-                        except:
-                            pass
-                    except:
-                        item_name = "item"
-
-                    # Write the item name and the URL
-                    with st.container(border=True):
-                        st.header(f"**{item_name}** - click below")
-                        st.page_link(
-                            label=f'**Search for "{item_name}" on Amazon**',
-                            page=url,
-                            icon="🛒",
-                            use_container_width=True,
-                        )
-                status.update(
-                    label=f"**Show Cart [{len(st.session_state.cart.items)} items]**",
-                    state="complete",
-                    expanded=False,
-                )
-        elif checkout_button and len(st.session_state.cart.items) == 0:
-            st.sidebar.warning("Your cart is empty. Please add items to your cart.")
-        st.sidebar.info(
-            """
-        # About
-        - Made with ❤️ by [KalagAI](https://kalagai.streamlit.app) team.
-        """
-        )
 
     def account_settings(self):
         with st.form(key="delete_account_form", clear_on_submit=True):
